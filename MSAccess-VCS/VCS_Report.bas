@@ -45,8 +45,10 @@ End Type
 'Exports print vars for reports
 Public Sub ExportPrintVars(ByVal obj_name As String, ByVal filePath As String)
   DoEvents
-  Dim FSO As Object
-  Set FSO = CreateObject("Scripting.FileSystemObject")
+  Dim fso As Object
+  Set fso = CreateObject("Scripting.FileSystemObject")
+  
+  filePath = SanitizeExportFilePath(filePath)
   
   Dim DevModeString As str_DEVMODE
   Dim DevModeExtra As String
@@ -72,7 +74,7 @@ Public Sub ExportPrintVars(ByVal obj_name As String, ByVal filePath As String)
   End If
   
   Dim OutFile As Object
-  Set OutFile = FSO.CreateTextFile(filePath, overwrite:=True, Unicode:=False)
+  Set OutFile = fso.CreateTextFile(filePath, overwrite:=True, Unicode:=False)
   
   'print out print var values
   OutFile.WriteLine DM.intOrientation
@@ -89,8 +91,10 @@ End Sub
 
 Public Sub ImportPrintVars(ByVal obj_name As String, ByVal filePath As String)
   
-  Dim FSO As Object
-  Set FSO = CreateObject("Scripting.FileSystemObject")
+  Dim fso As Object
+  Set fso = CreateObject("Scripting.FileSystemObject")
+  
+  filePath = SanitizeImportFilePath(filePath)
   
   Dim DevModeString As str_DEVMODE
   Dim DevModeExtra As String
@@ -117,7 +121,7 @@ Public Sub ImportPrintVars(ByVal obj_name As String, ByVal filePath As String)
   End If
   
   Dim InFile As Object
-  Set InFile = FSO.OpenTextFile(filePath, iomode:=ForReading, create:=False, Format:=TristateFalse)
+  Set InFile = fso.OpenTextFile(filePath, iomode:=ForReading, create:=False, Format:=TristateFalse)
   
   'print out print var values
   DM.intOrientation = InFile.ReadLine

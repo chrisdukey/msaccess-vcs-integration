@@ -29,16 +29,16 @@ Public Sub ExportLinkedTable(ByVal tbl_name As String, ByVal obj_path As String)
     
     tempFilePath = VCS_File.TempFile()
     
-    Dim FSO As Object
+    Dim fso As Object
     Dim OutFile As Object
 
-    Set FSO = CreateObject("Scripting.FileSystemObject")
+    Set fso = CreateObject("Scripting.FileSystemObject")
     ' open file for writing with Create=True, Unicode=True (USC-2 Little Endian format)
     VCS_Dir.MkDirIfNotExist obj_path
     
-    Set OutFile = FSO.CreateTextFile(tempFilePath, overwrite:=True, Unicode:=True)
+    Set OutFile = fso.CreateTextFile(tempFilePath, overwrite:=True, Unicode:=True)
     
-    OutFile.Write CurrentDb.TableDefs(tbl_name).name
+    OutFile.Write CurrentDb.TableDefs(tbl_name).Name
     OutFile.Write vbCrLf
     
     If InStr(1, CurrentDb.TableDefs(tbl_name).connect, "DATABASE=" & CurrentProject.Path) Then
@@ -110,21 +110,21 @@ End Function
 ' Save a Table Definition as SQL statement
 Public Sub ExportTableDef(Db As DAO.Database, td As DAO.TableDef, ByVal tableName As String, _
                           ByVal directory As String)
-    Dim fileName As String
-    fileName = directory & tableName & ".sql"
+    Dim FileName As String
+    FileName = directory & tableName & ".sql"
     Dim sql As String
     Dim fieldAttributeSql As String
     Dim idx As DAO.Index
     Dim fi As DAO.Field
-    Dim FSO As Object
+    Dim fso As Object
     Dim OutFile As Object
     Dim ff As Object
     'Debug.Print tableName
-    Set FSO = CreateObject("Scripting.FileSystemObject")
-    Set OutFile = FSO.CreateTextFile(fileName, overwrite:=True, Unicode:=False)
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set OutFile = fso.CreateTextFile(FileName, overwrite:=True, Unicode:=False)
     sql = "CREATE TABLE " & strName(tableName) & " (" & vbCrLf
     For Each fi In td.Fields
-        sql = sql & "  " & strName(fi.name) & " "
+        sql = sql & "  " & strName(fi.Name) & " "
         If (fi.Attributes And dbAutoIncrField) Then
             sql = sql & "AUTOINCREMENT"
         Else
@@ -134,12 +134,12 @@ Public Sub ExportTableDef(Db As DAO.Database, td As DAO.TableDef, ByVal tableNam
             Case dbText, dbVarBinary
                 sql = sql & "(" & fi.Size & ")"
             Case dbDecimal
-                sql = sql & formatDecimal(tableName, fi.name)
+                sql = sql & formatDecimal(tableName, fi.Name)
             Case Else
         End Select
         For Each idx In td.Indexes
             fieldAttributeSql = vbNullString
-            If idx.Fields.Count = 1 And idx.Fields(0).name = fi.name Then
+            If idx.Fields.Count = 1 And idx.Fields(0).Name = fi.Name Then
                 If idx.Primary Then fieldAttributeSql = fieldAttributeSql & " PRIMARY KEY "
                 If idx.Unique Then fieldAttributeSql = fieldAttributeSql & " UNIQUE "
                 If idx.Required Then fieldAttributeSql = fieldAttributeSql & " NOT NULL "
@@ -147,7 +147,7 @@ Public Sub ExportTableDef(Db As DAO.Database, td As DAO.TableDef, ByVal tableNam
                     Set ff = idx.Fields
                     fieldAttributeSql = fieldAttributeSql & formatReferences(Db, ff, tableName)
                 End If
-                If Len(fieldAttributeSql) > 0 Then fieldAttributeSql = " CONSTRAINT " & strName(idx.name) & fieldAttributeSql
+                If Len(fieldAttributeSql) > 0 Then fieldAttributeSql = " CONSTRAINT " & strName(idx.Name) & fieldAttributeSql
             End If
             sql = sql & fieldAttributeSql
         Next
@@ -193,7 +193,7 @@ Private Function formatReferences(Db As DAO.Database, ff As Object, _
           sql = " REFERENCES "
           sql = sql & strName(rel.table) & " ("
           For Each f In rel.Fields
-            sql = sql & strName(f.name) & ","
+            sql = sql & strName(f.Name) & ","
           Next
           sql = Left$(sql, Len(sql) - 1) & ")"
           If rel.Attributes And dbRelationUpdateCascade Then
@@ -214,9 +214,9 @@ Private Function formatConstraint(ByVal keyw As String, ByVal idx As DAO.Index) 
     Dim sql As String
     Dim fi As DAO.Field
     
-    sql = strName(idx.name) & " " & keyw & " ("
+    sql = strName(idx.Name) & " " & keyw & " ("
     For Each fi In idx.Fields
-        sql = sql & strName(fi.name) & ", "
+        sql = sql & strName(fi.Name) & ", "
     Next
     sql = Left$(sql, Len(sql) - 2) & ")" 'strip off last comma and close brackets
     
@@ -228,8 +228,8 @@ Private Function strName(ByVal s As String) As String
     strName = "[" & s & "]"
 End Function
 
-Private Function strType(ByVal i As Integer) As String
-    Select Case i
+Private Function strType(ByVal I As Integer) As String
+    Select Case I
     Case dbLongBinary
         strType = "LONGBINARY"
     Case dbBinary
@@ -286,7 +286,7 @@ End Function
 Private Function FieldInFields(fi As DAO.Field, ff As DAO.Fields) As Boolean
     Dim f As DAO.Field
     For Each f In ff
-        If f.name = fi.name Then
+        If f.Name = fi.Name Then
             FieldInFields = True
             Exit Function
         End If
@@ -304,7 +304,7 @@ End Function
 Private Function TableExists(ByVal TName As String) As Boolean
     Dim Db As DAO.Database
     Dim Found As Boolean
-    Dim Test As String
+    Dim test As String
     
     Const NAME_NOT_IN_COLLECTION As Integer = 3265
     
@@ -316,7 +316,7 @@ Private Function TableExists(ByVal TName As String) As Boolean
     On Error Resume Next
      
      ' See if the name is in the Tables collection.
-    Test = Db.TableDefs(TName).name
+    test = Db.TableDefs(TName).Name
     If Err.Number <> NAME_NOT_IN_COLLECTION Then Found = True
     
     ' Reset the error variable.
@@ -339,7 +339,7 @@ Private Function TableExportSql(ByVal tbl_name As String) As String
     Count = 0
     For Each fieldObj In rs.Fields
         If Count > 0 Then VCS_String.Sb_Append sb, ", "
-        VCS_String.Sb_Append sb, "[" & fieldObj.name & "]"
+        VCS_String.Sb_Append sb, "[" & fieldObj.Name & "]"
         Count = Count + 1
     Next
     
@@ -349,7 +349,7 @@ Private Function TableExportSql(ByVal tbl_name As String) As String
     For Each fieldObj In rs.Fields
         DoEvents
         If Count > 0 Then VCS_String.Sb_Append sb, ", "
-        VCS_String.Sb_Append sb, "[" & fieldObj.name & "]"
+        VCS_String.Sb_Append sb, "[" & fieldObj.Name & "]"
         Count = Count + 1
     Next
 
@@ -358,7 +358,7 @@ End Function
 
 ' Export the lookup table `tblName` to `source\tables`.
 Public Sub ExportTableData(ByVal tbl_name As String, ByVal obj_path As String)
-    Dim FSO As Object
+    Dim fso As Object
     Dim OutFile As Object
     Dim rs As DAO.Recordset ' DAO.Recordset
     Dim fieldObj As Object ' DAO.Field
@@ -377,19 +377,19 @@ Public Sub ExportTableData(ByVal tbl_name As String, ByVal obj_path As String)
         Exit Sub
     End If
 
-    Set FSO = CreateObject("Scripting.FileSystemObject")
+    Set fso = CreateObject("Scripting.FileSystemObject")
     ' open file for writing with Create=True, Unicode=True (USC-2 Little Endian format)
     VCS_Dir.MkDirIfNotExist obj_path
     Dim tempFileName As String
     tempFileName = VCS_File.TempFile()
 
-    Set OutFile = FSO.CreateTextFile(tempFileName, overwrite:=True, Unicode:=True)
+    Set OutFile = fso.CreateTextFile(tempFileName, overwrite:=True, Unicode:=True)
 
     c = 0
     For Each fieldObj In rs.Fields
         If c <> 0 Then OutFile.Write vbTab
         c = c + 1
-        OutFile.Write fieldObj.name
+        OutFile.Write fieldObj.Name
     Next
     OutFile.Write vbCrLf
 
@@ -400,7 +400,7 @@ Public Sub ExportTableData(ByVal tbl_name As String, ByVal obj_path As String)
             DoEvents
             If c <> 0 Then OutFile.Write vbTab
             c = c + 1
-            Value = rs(fieldObj.name)
+            Value = rs(fieldObj.Name)
             If IsNull(Value) Then
                 Value = vbNullString
             Else
@@ -419,7 +419,7 @@ Public Sub ExportTableData(ByVal tbl_name As String, ByVal obj_path As String)
     OutFile.Close
 
     VCS_File.ConvertUcs2Utf8 tempFileName, obj_path & tbl_name & ".txt"
-    FSO.DeleteFile tempFileName
+    fso.DeleteFile tempFileName
 End Sub
 
 ' Kill Table if Exists
@@ -431,18 +431,18 @@ End Sub
 
 Public Sub ImportLinkedTable(ByVal tblName As String, ByRef obj_path As String)
     Dim Db As DAO.Database
-    Dim FSO As Object
+    Dim fso As Object
     Dim InFile As Object
     
     Set Db = CurrentDb
-    Set FSO = CreateObject("Scripting.FileSystemObject")
+    Set fso = CreateObject("Scripting.FileSystemObject")
     
     Dim tempFilePath As String
     tempFilePath = VCS_File.TempFile()
     
     ConvertUtf8Ucs2 obj_path & tblName & ".LNKD", tempFilePath
     ' open file for reading with Create=False, Unicode=True (USC-2 Little Endian format)
-    Set InFile = FSO.OpenTextFile(tempFilePath, iomode:=ForReading, create:=False, Format:=TristateTrue)
+    Set InFile = fso.OpenTextFile(tempFilePath, iomode:=ForReading, create:=False, Format:=TristateTrue)
     
     On Error GoTo err_notable:
     DoCmd.DeleteObject acTable, tblName
@@ -484,7 +484,7 @@ Err_CreateLinkedTable_Fin:
     Fields = InFile.ReadLine()
     Dim Field As Variant
     Dim sql As String
-    sql = "CREATE INDEX __uniqueindex ON " & td.name & " ("
+    sql = "CREATE INDEX __uniqueindex ON " & td.Name & " ("
     
     For Each Field In Split(Fields, ";+")
         sql = sql & "[" & Field & "]" & ","
@@ -506,7 +506,7 @@ Public Sub ImportTableDef(ByVal tblName As String, ByVal directory As String)
     Dim filePath As String
     filePath = directory & tblName & ".sql"
     Dim Db As Object ' DAO.Database
-    Dim FSO As Object
+    Dim fso As Object
     Dim InFile As Object
     Dim buf As String
     Dim p As Integer
@@ -514,16 +514,16 @@ Public Sub ImportTableDef(ByVal tblName As String, ByVal directory As String)
     Dim strMsg As String
     Dim s As Variant
     Dim n As Integer
-    Dim i As Integer
+    Dim I As Integer
     Dim j As Integer
     Dim tempFileName As String
     tempFileName = VCS_File.TempFile()
 
     n = -1
-    Set FSO = CreateObject("Scripting.FileSystemObject")
+    Set fso = CreateObject("Scripting.FileSystemObject")
     VCS_File.ConvertUtf8Ucs2 filePath, tempFileName
     ' open file for reading with Create=False, Unicode=True (USC-2 Little Endian format)
-    Set InFile = FSO.OpenTextFile(tempFileName, iomode:=ForReading, create:=False, Format:=TristateTrue)
+    Set InFile = fso.OpenTextFile(tempFileName, iomode:=ForReading, create:=False, Format:=TristateTrue)
     Set Db = CurrentDb
     KillTable tblName, Db
     buf = InFile.ReadLine()
@@ -557,18 +557,18 @@ Public Sub ImportTableDef(ByVal tblName As String, ByVal directory As String)
       Loop
     Next
     On Error Resume Next
-    For i = 0 To n
-        strMsg = K(i).table & " to " & K(i).foreignTable
+    For I = 0 To n
+        strMsg = K(I).table & " to " & K(I).foreignTable
         strMsg = strMsg & "(  "
-        For j = 0 To UBound(K(i).refFields)
-            strMsg = strMsg & K(i).refFields(j) & ", "
+        For j = 0 To UBound(K(I).refFields)
+            strMsg = strMsg & K(I).refFields(j) & ", "
         Next j
         strMsg = Left$(strMsg, Len(strMsg) - 2) & ") to ("
-        For j = 0 To UBound(K(i).foreignFields)
-            strMsg = strMsg & K(i).foreignFields(j) & ", "
+        For j = 0 To UBound(K(I).foreignFields)
+            strMsg = strMsg & K(I).foreignFields(j) & ", "
         Next j
         strMsg = Left$(strMsg, Len(strMsg) - 2) & ") Check "
-        If K(i).isUpdate Then
+        If K(I).isUpdate Then
             strMsg = strMsg & " on update cascade " & vbCrLf
         Else
             strMsg = strMsg & " on delete cascade " & vbCrLf
@@ -586,17 +586,17 @@ Public Sub ImportTableData(ByVal tblName As String, ByVal obj_path As String)
     Dim Db As Object ' DAO.Database
     Dim rs As Object ' DAO.Recordset
     Dim fieldObj As Object ' DAO.Field
-    Dim FSO As Object
+    Dim fso As Object
     Dim InFile As Object
     Dim c As Long, buf As String, Values() As String, Value As Variant
 
-    Set FSO = CreateObject("Scripting.FileSystemObject")
+    Set fso = CreateObject("Scripting.FileSystemObject")
     
     Dim tempFileName As String
     tempFileName = VCS_File.TempFile()
     VCS_File.ConvertUtf8Ucs2 obj_path & tblName & ".txt", tempFileName
     ' open file for reading with Create=False, Unicode=True (USC-2 Little Endian format)
-    Set InFile = FSO.OpenTextFile(tempFileName, iomode:=ForReading, create:=False, Format:=TristateTrue)
+    Set InFile = fso.OpenTextFile(tempFileName, iomode:=ForReading, create:=False, Format:=TristateTrue)
     Set Db = CurrentDb
 
     Db.Execute "DELETE FROM [" & tblName & "]"
@@ -618,7 +618,7 @@ Public Sub ImportTableData(ByVal tblName As String, ByVal obj_path As String)
                     Value = Replace(Value, "\n", vbCrLf)
                     Value = Replace(Value, "\\", "\")
                 End If
-                rs(fieldObj.name) = Value
+                rs(fieldObj.Name) = Value
                 c = c + 1
             Next
             rs.Update
@@ -627,5 +627,7 @@ Public Sub ImportTableData(ByVal tblName As String, ByVal obj_path As String)
 
     rs.Close
     InFile.Close
-    FSO.DeleteFile tempFileName
+    fso.DeleteFile tempFileName
 End Sub
+
+

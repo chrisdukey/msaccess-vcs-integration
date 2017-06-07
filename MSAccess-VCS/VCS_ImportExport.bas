@@ -7,7 +7,9 @@ Option Explicit
 ' data, to be exported with source code
 ' Set to "*" to export the contents of all tables
 'Only used in ExportAllSource
-Private Const INCLUDE_TABLES As String = ""
+Private Const INCLUDE_TABLES As String = "Budget Export Table,Budget Export Table - StaffNos,Cost Centres For Printing," & _
+            "Cost Centres Staffing Levels,Export Table,MDB_Locations,Next Year Budget Contract Details By CC/Grade," & _
+            "Next Year Budget Contract Details Index,PremiumPercentImportTable,TAARPAST Totaled,TAARPAST Totaled Amalgamate,Table1 - Temp,Version"
 ' This is used in ImportAllSource
 Private Const DebugOutput As Boolean = False
 'this is used in ExportAllSource
@@ -16,18 +18,18 @@ Private Const ArchiveMyself As Boolean = False
 
 
 'returns true if named module is NOT part of the VCS code
-Private Function IsNotVCS(ByVal name As String) As Boolean
-    If name <> "VCS_ImportExport" And _
-      name <> "VCS_IE_Functions" And _
-      name <> "VCS_File" And _
-      name <> "VCS_Dir" And _
-      name <> "VCS_String" And _
-      name <> "VCS_Loader" And _
-      name <> "VCS_Table" And _
-      name <> "VCS_Reference" And _
-      name <> "VCS_DataMacro" And _
-      name <> "VCS_Report" And _
-      name <> "VCS_Relation" Then
+Private Function IsNotVCS(ByVal Name As String) As Boolean
+    If Name <> "VCS_ImportExport" And _
+      Name <> "VCS_IE_Functions" And _
+      Name <> "VCS_File" And _
+      Name <> "VCS_Dir" And _
+      Name <> "VCS_String" And _
+      Name <> "VCS_Loader" And _
+      Name <> "VCS_Table" And _
+      Name <> "VCS_Reference" And _
+      Name <> "VCS_DataMacro" And _
+      Name <> "VCS_Report" And _
+      Name <> "VCS_Relation" Then
         IsNotVCS = True
     Else
         IsNotVCS = False
@@ -69,8 +71,8 @@ Public Sub ExportAllSource()
     obj_count = 0
     For Each qry In Db.QueryDefs
         DoEvents
-        If Left$(qry.name, 1) <> "~" Then
-            VCS_IE_Functions.ExportObject acQuery, qry.name, obj_path & qry.name & ".bas", VCS_File.UsingUcs2
+        If Left$(qry.Name, 1) <> "~" Then
+            VCS_IE_Functions.ExportObject acQuery, qry.Name, obj_path & qry.Name & ".bas", VCS_File.UsingUcs2
             obj_count = obj_count + 1
         End If
     Next
@@ -96,24 +98,24 @@ Public Sub ExportAllSource()
         Debug.Print VCS_String.PadRight("Exporting " & obj_type_label & "...", 24);
         For Each doc In Db.Containers(obj_type_name).Documents
             DoEvents
-            If (Left$(doc.name, 1) <> "~") And _
-               (IsNotVCS(doc.name) Or ArchiveMyself) Then
+            If (Left$(doc.Name, 1) <> "~") And _
+               (IsNotVCS(doc.Name) Or ArchiveMyself) Then
                 If obj_type_label = "modules" Then
                     ucs2 = False
                 Else
                     ucs2 = VCS_File.UsingUcs2
                 End If
-                VCS_IE_Functions.ExportObject obj_type_num, doc.name, obj_path & doc.name & ".bas", ucs2
+                VCS_IE_Functions.ExportObject obj_type_num, doc.Name, obj_path & doc.Name & ".bas", ucs2
                 
                 If obj_type_label = "reports" Then
-                    VCS_Report.ExportPrintVars doc.name, obj_path & doc.name & ".pv"
+                    VCS_Report.ExportPrintVars doc.Name, obj_path & doc.Name & ".pv"
                 End If
                 
                 obj_count = obj_count + 1
             End If
         Next
 
-		Debug.Print VCS_String.PadRight("Sanitizing...", 15);
+                Debug.Print VCS_String.PadRight("Sanitizing...", 15);
         If obj_type_label <> "modules" Then
             VCS_IE_Functions.SanitizeTextFiles obj_path, "bas"
         End If
@@ -153,21 +155,21 @@ Public Sub ExportAllSource()
     For Each td In tds
         ' This is not a system table
         ' this is not a temporary table
-        If Left$(td.name, 4) <> "MSys" And _
-        Left$(td.name, 1) <> "~" Then
+        If Left$(td.Name, 4) <> "MSys" And _
+        Left$(td.Name, 1) <> "~" Then
             If Len(td.connect) = 0 Then ' this is not an external table
-                VCS_Table.ExportTableDef Db, td, td.name, obj_path
+                VCS_Table.ExportTableDef Db, td, td.Name, obj_path
                 If INCLUDE_TABLES = "*" Then
                     DoEvents
-                    VCS_Table.ExportTableData CStr(td.name), source_path & "tables\"
-                    If Len(Dir$(source_path & "tables\" & td.name & ".txt")) > 0 Then
+                    VCS_Table.ExportTableData CStr(td.Name), source_path & "tables\"
+                    If Len(Dir$(source_path & "tables\" & td.Name & ".txt")) > 0 Then
                         obj_data_count = obj_data_count + 1
                     End If
                 ElseIf (Len(Replace(INCLUDE_TABLES, " ", vbNullString)) > 0) And INCLUDE_TABLES <> "*" Then
                     DoEvents
                     On Error GoTo Err_TableNotFound
-                    If InCollection(IncludeTablesCol,td.name) Then
-                        VCS_Table.ExportTableData CStr(td.name), source_path & "tables\"
+                    If InCollection(IncludeTablesCol, td.Name) Then
+                        VCS_Table.ExportTableData CStr(td.Name), source_path & "tables\"
                         obj_data_count = obj_data_count + 1
                     End If
 Err_TableNotFound:
@@ -175,7 +177,7 @@ Err_TableNotFound:
                 'else don't export table data
                 End If
             Else
-                VCS_Table.ExportLinkedTable td.name, obj_path
+                VCS_Table.ExportLinkedTable td.Name, obj_path
             End If
             
             obj_count = obj_count + 1
@@ -199,11 +201,11 @@ Err_TableNotFound:
     
     For Each aRelation In CurrentDb.Relations
         ' Exclude relations from system tables and inherited (linked) relations
-        If Not (aRelation.name = "MSysNavPaneGroupsMSysNavPaneGroupToObjects" _
-                Or aRelation.name = "MSysNavPaneGroupCategoriesMSysNavPaneGroups" _
+        If Not (aRelation.Name = "MSysNavPaneGroupsMSysNavPaneGroupToObjects" _
+                Or aRelation.Name = "MSysNavPaneGroupCategoriesMSysNavPaneGroups" _
                 Or (aRelation.Attributes And DAO.RelationAttributeEnum.dbRelationInherited) = _
                 DAO.RelationAttributeEnum.dbRelationInherited) Then
-            VCS_Relation.ExportRelation aRelation, obj_path & aRelation.name & ".txt"
+            VCS_Relation.ExportRelation aRelation, obj_path & aRelation.Name & ".txt"
             obj_count = obj_count + 1
         End If
     Next
@@ -217,7 +219,7 @@ End Sub
 ' macros, modules, and lookup tables from `source` folder under the
 ' database's folder.
 Public Sub ImportAllSource()
-    Dim FSO As Object
+    Dim fso As Object
     Dim source_path As String
     Dim obj_path As String
     Dim obj_type As Variant
@@ -225,17 +227,17 @@ Public Sub ImportAllSource()
     Dim obj_type_label As String
     Dim obj_type_num As Integer
     Dim obj_count As Integer
-    Dim fileName As String
+    Dim FileName As String
     Dim obj_name As String
     Dim ucs2 As Boolean
 
-    Set FSO = CreateObject("Scripting.FileSystemObject")
+    Set fso = CreateObject("Scripting.FileSystemObject")
 
     CloseFormsReports
     'InitUsingUcs2
 
     source_path = VCS_Dir.ProjectPath() & "source\"
-    If Not FSO.FolderExists(source_path) Then
+    If Not fso.FolderExists(source_path) Then
         MsgBox "No source found at:" & vbCrLf & source_path, vbExclamation, "Import failed"
         Exit Sub
     End If
@@ -248,22 +250,22 @@ Public Sub ImportAllSource()
     End If
 
     obj_path = source_path & "queries\"
-    fileName = Dir$(obj_path & "*.bas")
+    FileName = Dir$(obj_path & "*.bas")
     
     Dim tempFilePath As String
     tempFilePath = VCS_File.TempFile()
     
-    If Len(fileName) > 0 Then
+    If Len(FileName) > 0 Then
         Debug.Print VCS_String.PadRight("Importing queries...", 24);
         obj_count = 0
-        Do Until Len(fileName) = 0
+        Do Until Len(FileName) = 0
             DoEvents
-            obj_name = Mid$(fileName, 1, InStrRev(fileName, ".") - 1)
-            VCS_IE_Functions.ImportObject acQuery, obj_name, obj_path & fileName, VCS_File.UsingUcs2
+            obj_name = Mid$(FileName, 1, InStrRev(FileName, ".") - 1)
+            VCS_IE_Functions.ImportObject acQuery, obj_name, obj_path & FileName, VCS_File.UsingUcs2
             VCS_IE_Functions.ExportObject acQuery, obj_name, tempFilePath, VCS_File.UsingUcs2
             VCS_IE_Functions.ImportObject acQuery, obj_name, tempFilePath, VCS_File.UsingUcs2
             obj_count = obj_count + 1
-            fileName = Dir$()
+            FileName = Dir$()
         Loop
         Debug.Print "[" & obj_count & "]"
     End If
@@ -272,12 +274,12 @@ Public Sub ImportAllSource()
 
     ' restore table definitions
     obj_path = source_path & "tbldef\"
-    fileName = Dir$(obj_path & "*.sql")
-    If Len(fileName) > 0 Then
+    FileName = Dir$(obj_path & "*.sql")
+    If Len(FileName) > 0 Then
         Debug.Print VCS_String.PadRight("Importing tabledefs...", 24);
         obj_count = 0
-        Do Until Len(fileName) = 0
-            obj_name = Mid$(fileName, 1, InStrRev(fileName, ".") - 1)
+        Do Until Len(FileName) = 0
+            obj_name = Mid$(FileName, 1, InStrRev(FileName, ".") - 1)
             If DebugOutput Then
                 If obj_count = 0 Then
                     Debug.Print
@@ -287,19 +289,19 @@ Public Sub ImportAllSource()
             End If
             VCS_Table.ImportTableDef CStr(obj_name), obj_path
             obj_count = obj_count + 1
-            fileName = Dir$()
+            FileName = Dir$()
         Loop
         Debug.Print "[" & obj_count & "]"
     End If
     
     
     ' restore linked tables - we must have access to the remote store to import these!
-    fileName = Dir$(obj_path & "*.LNKD")
-    If Len(fileName) > 0 Then
+    FileName = Dir$(obj_path & "*.LNKD")
+    If Len(FileName) > 0 Then
         Debug.Print VCS_String.PadRight("Importing Linked tabledefs...", 24);
         obj_count = 0
-        Do Until Len(fileName) = 0
-            obj_name = Mid$(fileName, 1, InStrRev(fileName, ".") - 1)
+        Do Until Len(FileName) = 0
+            obj_name = Mid$(FileName, 1, InStrRev(FileName, ".") - 1)
             If DebugOutput Then
                 If obj_count = 0 Then
                     Debug.Print
@@ -309,7 +311,7 @@ Public Sub ImportAllSource()
             End If
             VCS_Table.ImportLinkedTable CStr(obj_name), obj_path
             obj_count = obj_count + 1
-            fileName = Dir$()
+            FileName = Dir$()
         Loop
         Debug.Print "[" & obj_count & "]"
     End If
@@ -318,33 +320,33 @@ Public Sub ImportAllSource()
     
     ' NOW we may load data
     obj_path = source_path & "tables\"
-    fileName = Dir$(obj_path & "*.txt")
-    If Len(fileName) > 0 Then
+    FileName = Dir$(obj_path & "*.txt")
+    If Len(FileName) > 0 Then
         Debug.Print VCS_String.PadRight("Importing tables...", 24);
         obj_count = 0
-        Do Until Len(fileName) = 0
+        Do Until Len(FileName) = 0
             DoEvents
-            obj_name = Mid$(fileName, 1, InStrRev(fileName, ".") - 1)
+            obj_name = Mid$(FileName, 1, InStrRev(FileName, ".") - 1)
             VCS_Table.ImportTableData CStr(obj_name), obj_path
             obj_count = obj_count + 1
-            fileName = Dir$()
+            FileName = Dir$()
         Loop
         Debug.Print "[" & obj_count & "]"
     End If
     
     'load Data Macros - not DRY!
     obj_path = source_path & "tbldef\"
-    fileName = Dir$(obj_path & "*.xml")
-    If Len(fileName) > 0 Then
+    FileName = Dir$(obj_path & "*.xml")
+    If Len(FileName) > 0 Then
         Debug.Print VCS_String.PadRight("Importing Data Macros...", 24);
         obj_count = 0
-        Do Until Len(fileName) = 0
+        Do Until Len(FileName) = 0
             DoEvents
-            obj_name = Mid$(fileName, 1, InStrRev(fileName, ".") - 1)
+            obj_name = Mid$(FileName, 1, InStrRev(FileName, ".") - 1)
             'VCS_Table.ImportTableData CStr(obj_name), obj_path
             VCS_DataMacro.ImportDataMacros obj_name, obj_path
             obj_count = obj_count + 1
-            fileName = Dir$()
+            FileName = Dir$()
         Loop
         Debug.Print "[" & obj_count & "]"
     End If
@@ -366,27 +368,27 @@ Public Sub ImportAllSource()
         obj_path = source_path & obj_type_label & "\"
          
             
-        fileName = Dir$(obj_path & "*.bas")
-        If Len(fileName) > 0 Then
+        FileName = Dir$(obj_path & "*.bas")
+        If Len(FileName) > 0 Then
             Debug.Print VCS_String.PadRight("Importing " & obj_type_label & "...", 24);
             obj_count = 0
-            Do Until Len(fileName) = 0
+            Do Until Len(FileName) = 0
                 ' DoEvents no good idea!
-                obj_name = Mid$(fileName, 1, InStrRev(fileName, ".") - 1)
+                obj_name = Mid$(FileName, 1, InStrRev(FileName, ".") - 1)
                 If obj_type_label = "modules" Then
                     ucs2 = False
                 Else
                     ucs2 = VCS_File.UsingUcs2
                 End If
                 If IsNotVCS(obj_name) Then
-                    VCS_IE_Functions.ImportObject obj_type_num, obj_name, obj_path & fileName, ucs2
+                    VCS_IE_Functions.ImportObject obj_type_num, obj_name, obj_path & FileName, ucs2
                     obj_count = obj_count + 1
                 Else
                     If ArchiveMyself Then
                             MsgBox "Module " & obj_name & " could not be updated while running. Ensure latest version is included!", vbExclamation, "Warning"
                     End If
                 End If
-                fileName = Dir$()
+                FileName = Dir$()
             Loop
             Debug.Print "[" & obj_count & "]"
         
@@ -398,13 +400,13 @@ Public Sub ImportAllSource()
     obj_count = 0
     
     obj_path = source_path & "reports\"
-    fileName = Dir$(obj_path & "*.pv")
-    Do Until Len(fileName) = 0
+    FileName = Dir$(obj_path & "*.pv")
+    Do Until Len(FileName) = 0
         DoEvents
-        obj_name = Mid$(fileName, 1, InStrRev(fileName, ".") - 1)
-        VCS_Report.ImportPrintVars obj_name, obj_path & fileName
+        obj_name = Mid$(FileName, 1, InStrRev(FileName, ".") - 1)
+        VCS_Report.ImportPrintVars obj_name, obj_path & FileName
         obj_count = obj_count + 1
-        fileName = Dir$()
+        FileName = Dir$()
     Loop
     Debug.Print "[" & obj_count & "]"
     
@@ -412,12 +414,12 @@ Public Sub ImportAllSource()
     Debug.Print VCS_String.PadRight("Importing Relations...", 24);
     obj_count = 0
     obj_path = source_path & "relations\"
-    fileName = Dir$(obj_path & "*.txt")
-    Do Until Len(fileName) = 0
+    FileName = Dir$(obj_path & "*.txt")
+    Do Until Len(FileName) = 0
         DoEvents
-        VCS_Relation.ImportRelation obj_path & fileName
+        VCS_Relation.ImportRelation obj_path & FileName
         obj_count = obj_count + 1
-        fileName = Dir$()
+        FileName = Dir$()
     Loop
     Debug.Print "[" & obj_count & "]"
     DoEvents
@@ -455,26 +457,26 @@ On Error GoTo errorHandler
     
     Dim rel As DAO.Relation
     For Each rel In CurrentDb.Relations
-        If Not (rel.name = "MSysNavPaneGroupsMSysNavPaneGroupToObjects" Or _
-                rel.name = "MSysNavPaneGroupCategoriesMSysNavPaneGroups") Then
-            CurrentDb.Relations.Delete (rel.name)
+        If Not (rel.Name = "MSysNavPaneGroupsMSysNavPaneGroupToObjects" Or _
+                rel.Name = "MSysNavPaneGroupCategoriesMSysNavPaneGroups") Then
+            CurrentDb.Relations.Delete (rel.Name)
         End If
     Next
 
     Dim dbObject As Object
     For Each dbObject In Db.QueryDefs
         DoEvents
-        If Left$(dbObject.name, 1) <> "~" Then
+        If Left$(dbObject.Name, 1) <> "~" Then
 '            Debug.Print dbObject.Name
-            Db.QueryDefs.Delete dbObject.name
+            Db.QueryDefs.Delete dbObject.Name
         End If
     Next
     
     Dim td As DAO.TableDef
     For Each td In CurrentDb.TableDefs
-        If Left$(td.name, 4) <> "MSys" And _
-            Left$(td.name, 1) <> "~" Then
-            CurrentDb.TableDefs.Delete (td.name)
+        If Left$(td.Name, 4) <> "MSys" And _
+            Left$(td.Name, 1) <> "~" Then
+            CurrentDb.TableDefs.Delete (td.Name)
         End If
     Next
 
@@ -497,10 +499,10 @@ On Error GoTo errorHandler
         DoEvents
         For Each doc In Db.Containers(objTypeArray(OTNAME)).Documents
             DoEvents
-            If (Left$(doc.name, 1) <> "~") And _
-               (IsNotVCS(doc.name)) Then
+            If (Left$(doc.Name, 1) <> "~") And _
+               (IsNotVCS(doc.Name)) Then
 '                Debug.Print doc.Name
-                DoCmd.DeleteObject objTypeArray(OTID), doc.name
+                DoCmd.DeleteObject objTypeArray(OTID), doc.Name
             End If
         Next
     Next
@@ -532,11 +534,11 @@ End Sub
 Private Sub CloseFormsReports()
     On Error GoTo errorHandler
     Do While Forms.Count > 0
-        DoCmd.Close acForm, Forms(0).name
+        DoCmd.Close acForm, Forms(0).Name
         DoEvents
     Loop
     Do While Reports.Count > 0
-        DoCmd.Close acReport, Reports(0).name
+        DoCmd.Close acReport, Reports(0).Name
         DoEvents
     Loop
     Exit Sub
@@ -593,3 +595,5 @@ Exit_Proc:
 Err_Handle:
     Resume Exit_Proc
 End Function
+
+

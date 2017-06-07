@@ -7,23 +7,23 @@ Option Explicit
 
 ' Import References from a CSV, true=SUCCESS
 Public Function ImportReferences(ByVal obj_path As String) As Boolean
-    Dim FSO As Object
+    Dim fso As Object
     Dim InFile As Object
     Dim line As String
     Dim item() As String
     Dim GUID As String
     Dim Major As Long
     Dim Minor As Long
-    Dim fileName As String
+    Dim FileName As String
     Dim refName As String
     
-    fileName = Dir$(obj_path & "references.csv")
-    If Len(fileName) = 0 Then
+    FileName = Dir$(obj_path & "references.csv")
+    If Len(FileName) = 0 Then
         ImportReferences = False
         Exit Function
     End If
-    Set FSO = CreateObject("Scripting.FileSystemObject")
-    Set InFile = FSO.OpenTextFile(obj_path & fileName, iomode:=ForReading, create:=False, Format:=TristateFalse)
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set InFile = fso.OpenTextFile(obj_path & FileName, iomode:=ForReading, create:=False, Format:=TristateFalse)
     
 On Error GoTo failed_guid
     Do Until InFile.AtEndOfStream
@@ -43,7 +43,7 @@ go_on:
 On Error GoTo 0
     InFile.Close
     Set InFile = Nothing
-    Set FSO = Nothing
+    Set fso = Nothing
     ImportReferences = True
     Exit Function
     
@@ -61,13 +61,13 @@ End Function
 
 ' Export References to a CSV
 Public Sub ExportReferences(ByVal obj_path As String)
-    Dim FSO As Object
+    Dim fso As Object
     Dim OutFile As Object
     Dim line As String
     Dim ref As Reference
 
-    Set FSO = CreateObject("Scripting.FileSystemObject")
-    Set OutFile = FSO.CreateTextFile(obj_path & "references.csv", overwrite:=True, Unicode:=False)
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set OutFile = fso.CreateTextFile(obj_path & "references.csv", overwrite:=True, Unicode:=False)
     For Each ref In Application.References
         If ref.GUID <> vbNullString Then ' references of types mdb,accdb,mde etc don't have a GUID
             If Not ref.BuiltIn Then
@@ -75,7 +75,7 @@ Public Sub ExportReferences(ByVal obj_path As String)
                 OutFile.WriteLine line
             End If
         Else
-            line = ref.FullPath
+            line = ref.fullpath
             OutFile.WriteLine line
         End If
     Next

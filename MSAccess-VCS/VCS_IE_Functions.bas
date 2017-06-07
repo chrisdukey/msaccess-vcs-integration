@@ -11,13 +11,26 @@ Private Const StripPublishOption As Boolean = True
 Public Const ForReading = 1, ForWriting = 2, ForAppending = 8
 Public Const TristateTrue = -1, TristateFalse = 0, TristateUseDefault = -2
 
+Private Const VCS_FWDSLASH As String = "-VCS_fwdslash-"
+Private Const VCS_BACKSLASH As String = "-VCS_backslash-"
+Private Const VCS_GTRTHAN As String = "-VCS_gtrthan-"
+Private Const VCS_LESSTHAN As String = "-VCS_lessthan-"
+Private Const VCS_ASTERISK As String = "-VCS_asterisk-"
+Private Const VCS_QUESMARK As String = "-VCS_quesmark-"
+Private Const VCS_COLON As String = "-VCS_colon-"
+Private Const VCS_DBLQUOTE As String = "-VCS_dblquote-"
+Private Const VCS_PIPE As String = "-VCS_pipe-"
 
 ' Can we export without closing the form?
 
 ' Export a database object with optional UCS2-to-UTF-8 conversion.
 Public Sub ExportObject(ByVal obj_type_num As Integer, ByVal obj_name As String, _
                     ByVal file_path As String, Optional ByVal Ucs2Convert As Boolean = False)
-
+    
+    file_path = SanitizeExportFilePath(file_path)
+    
+    obj_name = RebuildObjectName(obj_name)
+    
     VCS_Dir.MkDirIfNotExist Left$(file_path, InStrRev(file_path, "\"))
     If Ucs2Convert Then
         Dim tempFileName As String
@@ -33,7 +46,12 @@ End Sub
 Public Sub ImportObject(ByVal obj_type_num As Integer, ByVal obj_name As String, _
                     ByVal file_path As String, Optional ByVal Ucs2Convert As Boolean = False)
     
+
     If Not VCS_Dir.FileExists(file_path) Then Exit Sub
+    
+    file_path = SanitizeExportFilePath(file_path)
+    
+    obj_name = RebuildObjectName(obj_name)
     
     If Ucs2Convert Then
         Dim tempFileName As String
@@ -41,13 +59,184 @@ Public Sub ImportObject(ByVal obj_type_num As Integer, ByVal obj_name As String,
         VCS_File.ConvertUtf8Ucs2 file_path, tempFileName
         Application.LoadFromText obj_type_num, obj_name, tempFileName
         
-        Dim FSO As Object
-        Set FSO = CreateObject("Scripting.FileSystemObject")
-        FSO.DeleteFile tempFileName
+        Dim fso As Object
+        Set fso = CreateObject("Scripting.FileSystemObject")
+        fso.DeleteFile tempFileName
     Else
         Application.LoadFromText obj_type_num, obj_name, file_path
     End If
 End Sub
+
+Public Function RebuildObjectName(ByVal FileName As String) As String
+Dim RegEx As Object
+
+Set RegEx = CreateObject("vbscript.regexp")
+' This line ensures it replaces every occurrance
+RegEx.Global = True
+
+' Using regular expressions to replace characters in form and report names that don't translate to
+' Windows file names
+RegEx.Pattern = VCS_FWDSLASH
+FileName = RegEx.Replace(FileName, "/")
+
+RegEx.Pattern = VCS_BACKSLASH
+FileName = RegEx.Replace(FileName, "\")
+
+RegEx.Pattern = VCS_GTRTHAN
+FileName = RegEx.Replace(FileName, ">")
+
+RegEx.Pattern = VCS_LESSTHAN
+FileName = RegEx.Replace(FileName, "<")
+
+RegEx.Pattern = VCS_COLON
+FileName = RegEx.Replace(FileName, ":")
+
+RegEx.Pattern = VCS_ASTERISK
+FileName = RegEx.Replace(FileName, "*")
+
+RegEx.Pattern = VCS_QUESMARK
+FileName = RegEx.Replace(FileName, "?")
+
+RegEx.Pattern = VCS_DBLQUOTE
+FileName = RegEx.Replace(FileName, Chr(34))
+
+RegEx.Pattern = VCS_PIPE
+FileName = RegEx.Replace(FileName, "¦")
+
+RebuildObjectName = FileName
+
+End Function
+
+Public Function SanitizeExportFilePath(ByVal file_path As String) As String
+Dim RegEx As Object
+Dim FileName As String
+Dim filefolder As String
+
+FileName = getFilenameFromPath(file_path)
+filefolder = getFolderFromPath(file_path)
+
+Set RegEx = CreateObject("vbscript.regexp")
+' This line ensures it replaces every occurrance
+RegEx.Global = True
+
+' Using regular expressions to replace characters in form and report names that don't translate to
+' Windows file names
+RegEx.Pattern = "[\/]"
+FileName = RegEx.Replace(FileName, VCS_FWDSLASH)
+
+RegEx.Pattern = "[\\]"
+FileName = RegEx.Replace(FileName, VCS_BACKSLASH)
+
+RegEx.Pattern = "[>]"
+FileName = RegEx.Replace(FileName, VCS_GTRTHAN)
+
+RegEx.Pattern = "[<]"
+FileName = RegEx.Replace(FileName, VCS_LESSTHAN)
+
+RegEx.Pattern = "[:]"
+FileName = RegEx.Replace(FileName, VCS_COLON)
+
+RegEx.Pattern = "[*]"
+FileName = RegEx.Replace(FileName, VCS_ASTERISK)
+
+RegEx.Pattern = "[?]"
+FileName = RegEx.Replace(FileName, VCS_QUESMARK)
+
+RegEx.Pattern = "[" & Chr(34) & "]"
+FileName = RegEx.Replace(FileName, VCS_DBLQUOTE)
+
+RegEx.Pattern = "[¦]"
+FileName = RegEx.Replace(FileName, VCS_PIPE)
+
+SanitizeExportFilePath = filefolder & FileName
+
+End Function
+
+Sub testsanitagain()
+Debug.Print SanitizeExportFilePath("C:\Users\Chris Duke\OneDrive - BOCS\BOC_Apps\PayBudget devt\in development\source\queries\Next Year Budget Contract Details - Set G/CC To N.bas")
+End Sub
+
+Public Function SanitizeImportFilePath(ByVal file_path As String) As String
+Dim RegEx As Object
+Dim FileName As String
+Dim filefolder As String
+
+FileName = getFilenameFromPath(file_path)
+filefolder = getFolderFromPath(file_path)
+
+Set RegEx = CreateObject("vbscript.regexp")
+' This line ensures it replaces every occurrance
+RegEx.Global = True
+
+' Using regular expressions to replace characters in form and report names that don't translate to
+' Windows file names
+RegEx.Pattern = VCS_FWDSLASH
+FileName = RegEx.Replace(FileName, "/")
+
+RegEx.Pattern = VCS_BACKSLASH
+FileName = RegEx.Replace(FileName, "\")
+
+RegEx.Pattern = VCS_GTRTHAN
+FileName = RegEx.Replace(FileName, ">")
+
+RegEx.Pattern = VCS_LESSTHAN
+FileName = RegEx.Replace(FileName, "<")
+
+RegEx.Pattern = VCS_COLON
+FileName = RegEx.Replace(FileName, ":")
+
+RegEx.Pattern = VCS_ASTERISK
+FileName = RegEx.Replace(FileName, "*")
+
+RegEx.Pattern = VCS_QUESMARK
+FileName = RegEx.Replace(FileName, "?")
+
+RegEx.Pattern = VCS_DBLQUOTE
+FileName = RegEx.Replace(FileName, Chr(34))
+
+RegEx.Pattern = VCS_PIPE
+FileName = RegEx.Replace(FileName, "¦")
+
+SanitizeImportFilePath = filefolder & FileName
+
+End Function
+
+Public Sub testSanit()
+Dim str As String
+
+str = SanitizeExportFilePath("c:\chris\blah\hy?>cheese.txt")
+
+Debug.Print str
+
+str = SanitizeImportFilePath(str)
+
+Debug.Print str
+End Sub
+
+
+
+Public Function getFilenameFromPath(strFullPath As String) As String
+    Dim I As Integer
+
+    For I = Len(strFullPath) To 1 Step -1
+        If Mid(strFullPath, I, 1) = "\" Then
+            getFilenameFromPath = Right(strFullPath, Len(strFullPath) - I)
+            Exit For
+        End If
+    Next
+End Function
+
+Public Function getFolderFromPath(strFullPath As String) As String
+    Dim I As Integer
+
+    For I = Len(strFullPath) To 1 Step -1
+        If Mid(strFullPath, I, 1) = "\" Then
+            getFolderFromPath = Left(strFullPath, I)
+            Exit For
+        End If
+    Next
+End Function
+
 
 'shouldn't this be SanitizeTextFile (Singular)?
 
@@ -57,8 +246,8 @@ End Sub
 ' version control).
 Public Sub SanitizeTextFiles(ByVal Path As String, ByVal Ext As String)
 
-    Dim FSO As Object
-    Set FSO = CreateObject("Scripting.FileSystemObject")
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
     '
     '  Setup Block matching Regex.
     Dim rxBlock As Object
@@ -92,20 +281,20 @@ Public Sub SanitizeTextFiles(ByVal Path As String, ByVal Ext As String)
     srchPattern = srchPattern & ")"
 'Debug.Print srchPattern
     rxLine.Pattern = srchPattern
-    Dim fileName As String
-    fileName = Dir$(Path & "*." & Ext)
+    Dim FileName As String
+    FileName = Dir$(Path & "*." & Ext)
     Dim isReport As Boolean
     isReport = False
     
-    Do Until Len(fileName) = 0
+    Do Until Len(FileName) = 0
         DoEvents
         Dim obj_name As String
-        obj_name = Mid$(fileName, 1, InStrRev(fileName, ".") - 1)
+        obj_name = Mid$(FileName, 1, InStrRev(FileName, ".") - 1)
 
         Dim InFile As Object
-        Set InFile = FSO.OpenTextFile(Path & obj_name & "." & Ext, iomode:=ForReading, create:=False, Format:=TristateFalse)
+        Set InFile = fso.OpenTextFile(Path & obj_name & "." & Ext, iomode:=ForReading, create:=False, Format:=TristateFalse)
         Dim OutFile As Object
-        Set OutFile = FSO.CreateTextFile(Path & obj_name & ".sanitize", overwrite:=True, Unicode:=False)
+        Set OutFile = fso.CreateTextFile(Path & obj_name & ".sanitize", overwrite:=True, Unicode:=False)
     
         Dim getLine As Boolean
         getLine = True
@@ -122,7 +311,7 @@ Public Sub SanitizeTextFiles(ByVal Path As String, ByVal Ext As String)
             End If
             '
             ' Skip lines starting with line pattern
-            If rxLine.Test(txt) Then
+            If rxLine.test(txt) Then
                 Dim rxIndent As Object
                 Set rxIndent = CreateObject("VBScript.RegExp")
                 rxIndent.Pattern = "^(\s+)\S"
@@ -143,14 +332,14 @@ Public Sub SanitizeTextFiles(ByVal Path As String, ByVal Ext As String)
                 ' Skip lines with deeper indentation
                 Do Until InFile.AtEndOfStream
                     txt = InFile.ReadLine
-                    If rxIndent.Test(txt) Then Exit Do
+                    If rxIndent.test(txt) Then Exit Do
                 Loop
                 ' We've moved on at least one line so do get a new one
                 ' when starting the loop again.
                 getLine = False
             '
             ' skip blocks of code matching block pattern
-            ElseIf rxBlock.Test(txt) Then
+            ElseIf rxBlock.test(txt) Then
                 Do Until InFile.AtEndOfStream
                     txt = InFile.ReadLine
                     If InStr(txt, "End") Then Exit Do
@@ -170,12 +359,15 @@ Public Sub SanitizeTextFiles(ByVal Path As String, ByVal Ext As String)
         OutFile.Close
         InFile.Close
 
-        FSO.DeleteFile (Path & fileName)
+        fso.DeleteFile (Path & FileName)
 
         Dim thisFile As Object
-        Set thisFile = FSO.GetFile(Path & obj_name & ".sanitize")
-        thisFile.Move (Path & fileName)
-        fileName = Dir$()
+        Set thisFile = fso.GetFile(Path & obj_name & ".sanitize")
+        thisFile.Move (Path & FileName)
+        FileName = Dir$()
     Loop
 
 End Sub
+
+
+

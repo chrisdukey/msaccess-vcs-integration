@@ -13,7 +13,7 @@ End Function
 
 ' Path/Directory for source files
 Public Function SourcePath() As String
-    SourcePath = ProjectPath & CurrentProject.name & ".src\"
+    SourcePath = ProjectPath & CurrentProject.Name & ".src\"
 End Function
 
 ' Create folder `Path`. Silently do nothing if it already exists.
@@ -34,13 +34,13 @@ End Sub
 
 ' Erase all *.`ext` files in `Path`.
 Public Sub ClearTextFilesFromDir(ByVal Path As String, ByVal Ext As String)
-    Dim FSO As Object
-    Set FSO = CreateObject("Scripting.FileSystemObject")
-    If Not FSO.FolderExists(Path) Then Exit Sub
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists(Path) Then Exit Sub
 
     On Error GoTo ClearTextFilesFromDir_noop
     If Dir$(Path & "*." & Ext) <> vbNullString Then
-        FSO.DeleteFile Path & "*." & Ext
+        fso.DeleteFile Path & "*." & Ext
     End If
     
 ClearTextFilesFromDir_noop:

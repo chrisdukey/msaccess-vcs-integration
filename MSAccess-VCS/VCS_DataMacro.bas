@@ -14,7 +14,7 @@ Public Sub ExportDataMacros(ByVal tableName As String, ByVal directory As String
     On Error GoTo Err_export
     Dim filePath As String
     
-    filePath = directory & tableName & ".xml"
+    filePath = directory & SanitizeExportFilePath(tableName) & ".xml"
 
     VCS_IE_Functions.ExportObject acTableDataMacro, tableName, filePath, VCS_File.UsingUcs2
     FormatDataMacro filePath
@@ -29,7 +29,7 @@ Public Sub ImportDataMacros(ByVal tableName As String, ByVal directory As String
     On Error GoTo Err_import
     Dim filePath As String
     
-    filePath = directory & tableName & ".xml"
+    filePath = directory & SanitizeImportFilePath(tableName) & ".xml"
     VCS_IE_Functions.ImportObject acTableDataMacro, tableName, filePath, VCS_File.UsingUcs2
     
     Exit Sub

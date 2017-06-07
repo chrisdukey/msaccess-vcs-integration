@@ -31,14 +31,14 @@ Fin_DirCheck:
 
     On Error GoTo Err_DelHandler
 
-    Dim fileName As String
+    Dim FileName As String
     'Use the list of files to import as the list to delete
-    fileName = Dir$(SourceDirectory & "*.bas")
-    Do Until Len(fileName) = 0
+    FileName = Dir$(SourceDirectory & "*.bas")
+    Do Until Len(FileName) = 0
         'strip file type from file name
-        fileName = Left$(fileName, InStrRev(fileName, ".bas") - 1)
-        DoCmd.DeleteObject acModule, fileName
-        fileName = Dir$()
+        FileName = Left$(FileName, InStrRev(FileName, ".bas") - 1)
+        DoCmd.DeleteObject acModule, FileName
+        FileName = Dir$()
     Loop
 
     GoTo Fin_DelHandler
@@ -50,17 +50,17 @@ Err_DelHandler:
     Resume Next
     
 Fin_DelHandler:
-    fileName = vbNullString
+    FileName = vbNullString
 
 'import files from specific dir? or allow user to input their own dir?
 On Error GoTo Err_LoadHandler
 
-    fileName = Dir$(SourceDirectory & "*.bas")
-    Do Until Len(fileName) = 0
+    FileName = Dir$(SourceDirectory & "*.bas")
+    Do Until Len(FileName) = 0
         'strip file type from file name
-        fileName = Left$(fileName, InStrRev(fileName, ".bas") - 1)
-        Application.LoadFromText acModule, fileName, SourceDirectory & fileName & ".bas"
-        fileName = Dir$()
+        FileName = Left$(FileName, InStrRev(FileName, ".bas") - 1)
+        Application.LoadFromText acModule, FileName, SourceDirectory & FileName & ".bas"
+        FileName = Dir$()
     Loop
 
     GoTo Fin_LoadHandler

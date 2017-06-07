@@ -81,3 +81,5 @@ Public Function SubString(ByVal p As Integer, ByVal s As String, ByVal startsWit
     
     SubString = Mid$(s, start + 1, cursor - start - 1)
 End Function
+
+
